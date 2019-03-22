@@ -143,15 +143,15 @@ dired-after-readin-hook on initial display and when a subdirectory is
 inserted (with `i')."
   ;;if a state has been chosen in this buffer, respect it
   (if dired-details-state
-    (when (eq 'hidden dired-details-state)
-      (dired-details-hide))
+      (when (eq 'hidden dired-details-state)
+        (dired-details-hide))
     ;;otherwise, use the default state
     (when dired-details-initially-hide
       (dired-details-hide))))
 
 (defun dired-details-delete-overlays ()
-  (mapc '(lambda (list) (mapc 'delete-overlay
-                             (cdr list)))
+  (mapc #'(lambda (list) (mapc 'delete-overlay
+                          (cdr list)))
         dired-details-internal-overlay-list)
   (setq dired-details-internal-overlay-list nil))
 
@@ -161,12 +161,12 @@ With positive prefix argument ARG hide the details, with negative
 show them."
   (interactive "P")
   (let ((hide (if (null arg)
-                (not (eq 'hidden dired-details-state))
+                  (not (eq 'hidden dired-details-state))
                 (> (prefix-numeric-value arg) 0))))
     (if default-too
-      (setq dired-details-initially-hide hide))
+        (setq dired-details-initially-hide hide))
     (if hide (dired-details-hide)
-        (dired-details-show))))
+      (dired-details-show))))
 
 (defun dired-details-hide ()
   "Make an invisible, evaporable overlay for each file-line's details
@@ -187,25 +187,25 @@ in this dired buffer."
       (widen)
       ;;hide each displayed subdirectory
       (mapc
-       '(lambda (dir-and-pos)
-          (let ((cached-overlays (assoc (car dir-and-pos)
-                                        dired-details-internal-overlay-list)))
-            (if cached-overlays
-              ;;reuse the existing overlays
-              (dired-details-frob-overlays t)
-              ;;no existing overlays for this subdir, make 'em
-              (let ((cache (list (car dir-and-pos)))
-                    (subdir-start (cdr dir-and-pos))
-                    (subdir-end (1- (dired-get-subdir-max dir-and-pos))))
-                (goto-char subdir-start)
-                (forward-line 1) ;;always skip the dir line
-                ;;v1.3 (dired-goto-next-file)
-                (while (< (point) subdir-end)
-                  (dired-details-make-current-line-overlay cache)
-                  (forward-line 1))
-                  ;;v1.3 (dired-next-line 1))
-                (setq dired-details-internal-overlay-list
-                      (cons cache dired-details-internal-overlay-list))))))
+       #'(lambda (dir-and-pos)
+           (let ((cached-overlays (assoc (car dir-and-pos)
+                                         dired-details-internal-overlay-list)))
+             (if cached-overlays
+                 ;;reuse the existing overlays
+                 (dired-details-frob-overlays t)
+               ;;no existing overlays for this subdir, make 'em
+               (let ((cache (list (car dir-and-pos)))
+                     (subdir-start (cdr dir-and-pos))
+                     (subdir-end (1- (dired-get-subdir-max dir-and-pos))))
+                 (goto-char subdir-start)
+                 (forward-line 1) ;;always skip the dir line
+                 ;;v1.3 (dired-goto-next-file)
+                 (while (< (point) subdir-end)
+                   (dired-details-make-current-line-overlay cache)
+                   (forward-line 1))
+                 ;;v1.3 (dired-next-line 1))
+                 (setq dired-details-internal-overlay-list
+                       (cons cache dired-details-internal-overlay-list))))))
        dired-subdir-alist)))
   (setq dired-details-state 'hidden))
 
@@ -224,7 +224,7 @@ hidden in this buffer."
                  (make-overlay (+ 2 bol) (point)))
                 ((and dired-details-hide-extra-lines
                       (let ((line (buffer-substring (point-at-bol) (point-at-eol))))
-                        (when (delq nil (mapcar (lambda (x) (string-match x line))
+                        (when (delq nil (mapcar #'(lambda (x) (string-match x line))
                                                 dired-details-invisible-lines))
                           (let ((o (make-overlay bol (1+ (point-at-eol)))))
                             ;;this is delayed so that the hide-link bit below doesn't bork
@@ -237,8 +237,8 @@ hidden in this buffer."
                        (search-forward-regexp
                         "-> \\(.*\\)"
                         (save-excursion (end-of-line) (point)) t))
-              (make-overlay (match-beginning 1) (match-end 1))))))
-    
+                (make-overlay (match-beginning 1) (match-end 1))))))
+
     (when details
       (overlay-put details 'evaporate t)
       (dired-details-hide-overlay details)
@@ -248,7 +248,7 @@ hidden in this buffer."
         (dired-details-hide-overlay ln-target))
 
       (setcdr cache (append (if ln-target
-                              (list ln-target details)
+                                (list ln-target details)
                               (list details))
                             (cdr cache))))))
 
@@ -264,10 +264,10 @@ hidden in this buffer."
 
 (defun dired-details-frob-overlays ( hide )
   (if dired-details-internal-overlay-list
-    (mapc '(lambda (list)
-             (mapc (if hide 'dired-details-hide-overlay 'dired-details-show-overlay)
-                   (cdr list)))
-          dired-details-internal-overlay-list)))
+      (mapc #'(lambda (list)
+                (mapc (if hide 'dired-details-hide-overlay 'dired-details-show-overlay)
+                      (cdr list)))
+            dired-details-internal-overlay-list)))
 
 (provide 'dired-details)
 
